@@ -15,20 +15,24 @@ class Board():
     """
     
     class Cell():
+        """Einzelne Zelle; gemeinsamer speicherort für alle Zellbezogenen variablen
+        Args:
+            pos (tupel(int,int)): Koordinaten der Zelle in der Matrix
+        """
         def __init__(self, pos):
             self.position = pos
             self.mine = False
             self.revealed = False
             self.surrounding_mines = 0
-            self.surrounding = [(0,1),(1,0),(1,1),(-1,0),(-1,1),(-1,-1),(1,-1),(0,-1),] #relative Koordinaten aller Nachbarfelder
+            self.surrounding_offsets = [(0,1),(1,0),(1,1),(-1,0),(-1,1),(-1,-1),(1,-1),(0,-1),] #relative Koordinaten aller Nachbarfelder
 
             #gui objekte
             self.frame = None
             self.label = None
             self.button = None
 
-        def set_mine(self):
-            self.mine = True        
+        # def set_mine(self):
+        #     self.mine = True        
 
         def __str__(self):
             if self.mine:
@@ -37,48 +41,40 @@ class Board():
                 return str(self.surrounding_mines)
     
     def __init__(self, shape, mines):
-        self.matrix = np.full(shape, None)
-        self.xlength = self.matrix.shape[0]
-        self.ylength = self.matrix.shape[1]
-        self.fill_matrix_with_cells()
-        self.spreadmines(mines)
+        self.shape =  shape
+        self.matrix = [[self.Cell((j,i)) for i in range(self.shape[0])] for j in range(self.shape[1])]
+        self.spread_mines(mines)
         self.count_surrounding_mines()
-        
-    def fill_matrix_with_cells(self):
-        for i in range(self.xlength):
-            for j in range(self.ylength):
-                self.matrix[i,j] = self.Cell((i,j))
-    
+     
     def printmines(self):
-        for i in range(self.xlength):
+        for row in self.matrix:
             print()
-            for j in range(self.ylength):
-                print(self.matrix[i,j],' ', end='')
+            for cell in row:
+                print(cell,' ', end='')
                 
         print()
     
-    def spreadmines(self, mines):
+    def spread_mines(self, mines):
         mines_put = 0
         while mines_put < mines:
-            x =  rd.randint(0, self.matrix.shape[0]-1)
-            y =  rd.randint(0, self.matrix.shape[0]-1)
-            if not self.matrix[x,y].mine:
-                self.matrix[x,y].set_mine()
+            x =  rd.randint(0, self.shape[0]-1)
+            y =  rd.randint(0, self.shape[1]-1)
+            if not self.matrix[x][y].mine:
+                self.matrix[x][y].mine = True
                 mines_put += 1
 
     def count_surrounding_mines(self):
         
-        for i in range(self.xlength):
-            for j in range(self.ylength):
-                if not self.matrix[i,j].mine:
-                    surrounding_mines = 0
-                    for coords in self.matrix[i,j].surrounding:
-                        exact_coordinate = (self.matrix[i,j].position[0]+coords[0]),(self.matrix[i,j].position[1]+coords[1])
-                        if exact_coordinate[0] >=0 and exact_coordinate[0] < self.xlength and exact_coordinate[1] >=0 and exact_coordinate[1] < self.ylength:
-                            if self.matrix[exact_coordinate].mine:
-                                    surrounding_mines += 1
-                        
-                    self.matrix[i,j].surrounding_mines = surrounding_mines
+        for row in self.matrix:
+            for cell in row:
+                if not cell.mine:
+                    for dx, dy in cell.surrounding_offsets:
+                        nx = cell.position[0] + dx
+                        ny = cell.position[1] + dy
+                        if 0 <= nx < self.shape[0] and 0 <= ny < self.shape[1]:
+                            if self.matrix[nx][ny].mine:
+                                cell.surrounding_mines += 1                        
+ 
                         
 class GUI():
     def __init__(self, root, board, game):
@@ -102,10 +98,10 @@ class GUI():
         self.boardFrame = tk.Frame(self.gameFrame)
         self.boardFrame.pack(fill='both', expand=True)
 
-        for i in range(self.board.xlength):
-            for j in range(self.board.ylength):
-                self.board.matrix[i,j].frame = tk.Frame(master=self.boardFrame, height=cellsize, width=self.cellsize, bg='gray')
-                self.board.matrix[i,j].frame.grid(row=i, column=j, padx=padxy, pady=padxy)
+        for row in self.board.matrix:
+            for cell in row:
+                cell.frame = tk.Frame(master=self.boardFrame, height=cellsize, width=self.cellsize, bg='gray')
+                cell.frame.grid(row=cell.position[0], column=cell.position[1], padx=padxy, pady=padxy)
          
         self.update_windowsize()
         self.guiboard_labels()
@@ -118,41 +114,40 @@ class GUI():
         self.root.geometry(f"{width}x{height}")
 
     def guiboard_labels(self):
-        for i in range(self.board.xlength):
-            for j in range(self.board.ylength):
-                self.board.matrix[i,j].label = tk.Label(master=self.board.matrix[i,j].frame, height=self.cellsize, width=self.cellsize)
-                if self.board.matrix[i,j].mine:
-                    self.board.matrix[i,j].label.config(text='X', bg='red')
+        for row in self.board.matrix:
+            for cell in row:
+                cell.label = tk.Label(master=cell.frame, height=self.cellsize, width=self.cellsize)
+                if cell.mine:
+                    cell.label.config(text='X', bg='red')
                 else:
                     colors = ['gray', 'blue', 'darkgreen', 'red', 'darkblue', 'violet', 'cyan', 'yellow', 'orange']
-                    self.board.matrix[i,j].label.config(text=str(self.board.matrix[i,j].surrounding_mines),fg=colors[self.board.matrix[i,j].surrounding_mines], font=("Arial", 14, "bold"))
+                    cell.label.config(text=str(cell.surrounding_mines),fg=colors[cell.surrounding_mines], font=("Arial", 14, "bold"))
                     
                     
                 #label.place(relx=0.5, rely=0.5, anchor='center')
 
     def guiboard_buttons(self):
-        for i in range(self.board.xlength):
-            for j in range (self.board.ylength):
-                self.board.matrix[i,j].button = tk.Button(master=self.board.matrix[i,j].frame, bg='gray')
-                self.board.matrix[i,j].button.place(relx=0.5, rely=0.5, anchor='center')
-                self.board.matrix[i,j].button.bind('<Button-1>', lambda event, i=i, j=j: self.open_field(event, i, j))
+        for row in self.board.matrix:
+            for cell in row:
+                cell.button = tk.Button(master=cell.frame, bg='gray')
+                cell.button.place(relx=0.5, rely=0.5, anchor='center')
+                cell.button.bind('<Button-1>', lambda event, cell=cell: self.open_field(event, cell))
                 
-    def open_field(self,event, i,j):
-        self.board.matrix[i,j].revealed = True
-        self.board.matrix[i,j].label.place(relx=0.5, rely=0.5, anchor='center')
-        self.board.matrix[i,j].button.destroy()
+    def open_field(self,event, cell):
+        cell.revealed = True
+        cell.label.place(relx=0.5, rely=0.5, anchor='center')
+        cell.button.destroy()
 
-        if game.gameactive:
-            if self.board.matrix[i,j].mine:
+        if self.game.gameactive:
+            if cell.mine:
                 self.game.lost()
 
-            
             self.game.check_win()
 
     def open_all(self):
-        for i in range(self.board.xlength):
-            for j in range(self.board.ylength):
-                self.open_field(None, i,j)
+        for row in self.board.matrix:
+            for cell in row:
+                self.open_field(None, cell)
 
     def check_exit(self):
         self.root.bind('<Escape>',self.close_window)
@@ -169,18 +164,19 @@ class Game():
         self.gameactive = True
         self.root = tk.Tk()
 
-        self.board = Board((5,5), 5)
+        self.board = Board((10,10), 10)
         
         self.gui = GUI(self.root,self.board, self)
+        
         self.root.mainloop()
 
     def check_win(self):
         if self.gameactive:
             win = True
-            for i in range(self.board.xlength):
-                for j in range(self.board.ylength):
-                    if not self.board.matrix[i,j].mine:
-                        if not self.board.matrix[i,j].revealed:
+            for row in self.board.matrix:
+                for cell in row:
+                    if not cell.mine:
+                        if not cell.revealed:
                             win = False
 
             if win:
@@ -193,14 +189,15 @@ class Game():
         self.gameactive = False
         self.gui.screen_lost()
         
-        for i in range(self.board.xlength):
-            for j in range(self.board.ylength):
-                if not self.board.matrix[i,j].revealed:
-                    self.board.matrix[i,j].button.bind('<Button-1>', self.restart)
+        for row in self.board.matrix:
+            for cell in row:
+                if not cell.revealed:
+                    cell.button.bind('<Button-1>', self.restart)
         self.root.bind('<Button-1>', self.restart)
 
-    def restart(self,event):
-        self.root.destroy()
+    def restart(self,event=None):
+        if self.root:
+            self.root.destroy()
         self.start()
 
 if __name__=='__main__':
