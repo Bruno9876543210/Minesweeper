@@ -1,6 +1,7 @@
 import tkinter as tk
 import numpy as np
 import random as rd
+from pathlib import Path
 
 
 
@@ -23,6 +24,7 @@ class Board():
             self.position = pos
             self.mine = False
             self.revealed = False
+            self.flagged = False
             self.surrounding_mines = 0
             self.surrounding_offsets = [(0,1),(1,0),(1,1),(-1,0),(-1,1),(-1,-1),(1,-1),(0,-1),] #relative Koordinaten aller Nachbarfelder
 
@@ -83,6 +85,10 @@ class GUI():
         self.root = root
         self.root.title('Minesweeper')        
 
+        #files
+        self.currentscriptpath = Path(__file__).resolve().parent
+        self.image_flag = tk.PhotoImage(file=self.currentscriptpath/"Data"/"flag.png")
+        self.image_mine = tk.PhotoImage(file=self.currentscriptpath/"Data"/"mine.png")
 
         self.create_guiboard(30,2)   # erzeuge GUI-Board, Parameter: Zellengröße, Zellenabstand
         
@@ -118,7 +124,7 @@ class GUI():
             for cell in row:
                 cell.label = tk.Label(master=cell.frame, height=self.cellsize, width=self.cellsize)
                 if cell.mine:
-                    cell.label.config(text='X', bg='red')
+                    cell.label.config(image=self.image_mine, text='X')
                 else:
                     colors = ['gray', 'blue', 'darkgreen', 'red', 'darkblue', 'violet', 'cyan', 'yellow', 'orange']
                     cell.label.config(text=str(cell.surrounding_mines),fg=colors[cell.surrounding_mines], font=("Arial", 14, "bold"))
@@ -132,8 +138,12 @@ class GUI():
                 cell.button = tk.Button(master=cell.frame, bg='gray')
                 cell.button.place(relx=0.5, rely=0.5, anchor='center')
                 cell.button.bind('<Button-1>', lambda event, cell=cell: self.open_field(event, cell))
+                cell.button.bind('<Button-3>', lambda event, cell=cell: self.flag(event, cell))
                 
     def open_field(self,event, cell):
+        if cell.mine:
+            cell.label.config(bg='red')
+        
         cell.revealed = True
         cell.label.place(relx=0.5, rely=0.5, anchor='center')
         cell.button.destroy()
@@ -148,6 +158,14 @@ class GUI():
         for row in self.board.matrix:
             for cell in row:
                 self.open_field(None, cell)
+
+    def flag(self,event=None, cell=None):
+        if not cell.flagged: #setze Flagge
+            cell.flagged = True
+            cell.button.config(image=self.image_flag)
+        else: #entferne flagge
+            cell.flagged = False
+            cell.button.config(image='')
 
     def check_exit(self):
         self.root.bind('<Escape>',self.close_window)
