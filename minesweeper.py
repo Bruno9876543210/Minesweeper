@@ -32,8 +32,8 @@ class Board():
             self.label = None
             self.button = None
 
-        # def set_mine(self):
-        #     self.mine = True        
+        def set_mine(self):
+            self.mine = True        
 
         def __str__(self):
             if self.mine:
@@ -44,6 +44,7 @@ class Board():
     def __init__(self, shape, mines):
         self.rows, self.cols = shape
         self.shape = shape
+        self.mines = mines
         self.matrix = [[self.Cell((i, j)) for j in range(self.cols)] for i in range(self.rows)]
         self.spread_mines(mines)
         self.count_surrounding_mines()
@@ -95,15 +96,20 @@ class GUI():
 
         self.gameFrame = tk.Frame(master=self.root)
         self.gameFrame.pack(fill='both', expand=True)
+        
         self.create_guiboard(30,2)   # erzeuge GUI-Board, Parameter: Zellengröße, Zellenabstand
         self.topline()
 
         self.topline_frame.pack(fill='x', padx=5)
         self.board_frame.pack(fill="x", expand=True, pady=10, padx=5)
         self.update_windowsize()
-        
+
         self.check_exit()
 
+    def start_screen(self):
+        self.start_screen_frame = tk.Frame(master=self.root, bg='red')
+        self.start_screen_frame.pack(fill='both', expand=True)
+        self.start_screen_frame.lift()
     
     def create_guiboard(self, cellsize, padxy):
         self.cellsize = cellsize
@@ -137,8 +143,6 @@ class GUI():
                     cell.label.config(text=str(cell.surrounding_mines),fg=colors[cell.surrounding_mines], font=("Arial", 14, "bold"))
                 
                     
-                #label.place(relx=0.5, rely=0.5, anchor='center')
-
     def guiboard_buttons(self):
         for row in self.board.matrix:
             for cell in row:
@@ -149,17 +153,49 @@ class GUI():
                 cell.label.bind('<Double-Button-1>', lambda event, cell=cell:self.chord(event, cell))
                          
     def topline(self):
-        #oberer balken auf dem Spielbildschirm für Smileyknopf, Timer und Minenanzahl
+        """oberer balken auf dem Spielbildschirm für Smileyknopf, Timer und Minenanzahl"""
         boardwidth = self.board.rows*(self.cellsize+self.padxy)
         self.topline_frame = tk.Frame(master=self.gameFrame, height=100, width=boardwidth,bg='lightgray')
+        self.flags_left()
 
+        """Smiley Button zum Restart des Spiels"""
         smiley_size = 80
         self.smiley_frame = tk.Frame(master=self.topline_frame, height=smiley_size, width=smiley_size,bg='red')
         self.smiley_button = tk.Button(master=self.smiley_frame, height=smiley_size, width=smiley_size, image=self.smiley[0], command=self.game.restart)
         self.smiley_frame.pack(side='top', padx=10)
         self.smiley_button.pack(expand=True)
+
+        """Initialisierung des Timers"""
+        self.timer_frame = tk.Frame(master=self.topline_frame, height=self.mines_left_size, width=self.mines_left_size)
+        self.timer_label = tk.Label(master=self.timer_frame, height=self.mines_left_size, width=self.mines_left_size, text="0", font=("Arial", 14, "bold"))
+        self.timer_label.place(anchor='center', relx=0.5, rely=0.5)
+        self.timer_frame.place(x=boardwidth-self.mines_left_size, y=50-self.mines_left_size/2)
+        self.timer_running = False
+        self.timer_update()
+
+    def flags_left(self):
+        """Anzeige der Flaggen, die man theoretisch noch setzen muss"""
+        self.mines_left = self.board.mines
+        self.mines_left_size = 40
+        self.mines_frame = tk.Frame(master=self.topline_frame, height=self.mines_left_size, width=self.mines_left_size,bg='red')
+        self.mines_left_label = tk.Label(master=self.mines_frame, height=self.mines_left_size, width=self.mines_left_size, text=self.mines_left, font=("Arial", 14, "bold"), foreground='red')
+        self.mines_left_label.place(relx=0.5, rely=0.5, anchor='center')
+        self.mines_frame.place(x = 20, y = 50-self.mines_left_size/2)
+
+    def timer_update(self):
+        """Ändert den Timer um 1"""
+        if self.timer_running:
+            time = int(self.timer_label.cget('text'))
+            time += 1
+            self.timer_label.config(text=str(time))
+            self.root.after(1000, self.timer_update)
         
+
     def open_field(self,event=None, cell=None):
+        if not self.timer_running and self.game.gameactive:
+            self.timer_running = True
+            self.timer_update()
+
         if cell.mine:
             cell.label.config(bg='red')
         
@@ -170,8 +206,9 @@ class GUI():
         if self.game.gameactive:
             if cell.mine:
                 self.game.lost()
-            # if cell.surrounding_mines == 0:
-            #     self.chord(cell=cell)
+            if cell.surrounding_mines == 0:
+            
+                self.chord(cell=cell)
 
             self.game.check_win()
 
@@ -181,21 +218,24 @@ class GUI():
                 self.open_field(None, cell)
 
     def chord(self,event=None, cell=None):
-        self.open_field(cell=cell)
+        #self.open_field(cell=cell)
         for target in self.board.surrounding_offsets:
             nx, ny = cell.position[0]+target[0], cell.position[1] + target[1] 
             if 0 <= nx < self.board.rows and 0 <= ny < self.board.cols:
-                target_cell = self.board.matrix[nx][ny]
-                if not target_cell.mine:
-                    self.open_field(cell=target_cell)
+                neighbor = self.board.matrix[nx][ny]
+                if not neighbor.revealed and not neighbor.flagged:
+                    self.open_field(cell=neighbor)
 
     def flag(self,event=None, cell=None):
         if not cell.flagged: #setze Flagge
             cell.flagged = True
             cell.button.config(image=self.image_flag)
+            self.mines_left -= 1
         else: #entferne flagge
             cell.flagged = False
             cell.button.config(image='')
+            self.mines_left += 1
+        self.mines_left_label.config(text=self.mines_left)
 
     def check_exit(self):
         self.root.bind('<Escape>',self.close_window)
@@ -213,7 +253,7 @@ class Game():
         self.gameactive = True
         self.root = tk.Tk()
 
-        self.board = Board((10,10), 10)
+        self.board = Board((10,10), 20)
         
         self.gui = GUI(self.root,self.board, self)
         
@@ -233,17 +273,14 @@ class Game():
 
     def win(self):
         self.gui.smiley_button.config(image=self.gui.smiley[2])
+        self.gameactive = False
+        self.gui.timer_running = False
 
     def lost(self):
         self.gameactive = False
+        self.gui.timer_running = False
         self.gui.screen_lost()
         
-        for row in self.board.matrix:
-            for cell in row:
-                if not cell.revealed:
-                    cell.button.bind('<Button-1>', self.restart)
-        self.root.bind('<Button-1>', self.restart)
-
     def restart(self,event=None):
         if self.root:
             self.root.destroy()
