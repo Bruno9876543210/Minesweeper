@@ -31,31 +31,16 @@ class Board():
             self.frame = None
             self.label = None
             self.button = None
-
-        def set_mine(self):
-            self.mine = True        
-
-        def __str__(self):
-            if self.mine:
-                return "X"
-            else:
-                return str(self.surrounding_mines)
-    
+   
     def __init__(self, shape, mines):
         self.rows, self.cols = shape
         self.shape = shape
         self.mines = mines
         self.matrix = [[self.Cell((i, j)) for j in range(self.cols)] for i in range(self.rows)]
+        self.surrounding_offsets = [(0,1),(1,0),(1,1),(-1,0),(-1,1),(-1,-1),(1,-1),(0,-1),] #relative Koordinaten der Nachbarfelder einer Zelle
         self.spread_mines(mines)
         self.count_surrounding_mines()
-     
-    def printmines(self):
-        for row in self.matrix:
-            print()
-            for cell in row:
-                print(cell,' ', end='')
-        print()
-    
+        
     def spread_mines(self, mines):
         mines_put = 0
         while mines_put < mines:
@@ -66,7 +51,6 @@ class Board():
                 mines_put += 1
 
     def count_surrounding_mines(self):
-        self.surrounding_offsets = [(0,1),(1,0),(1,1),(-1,0),(-1,1),(-1,-1),(1,-1),(0,-1),] #relative Koordinaten der Nachbarfelder einer Zelle
         for row in self.matrix:
             for cell in row:
                 if not cell.mine:
@@ -98,9 +82,9 @@ class GUI():
         self.gameFrame.pack(fill='both', expand=True)
         
         self.create_guiboard(30,2)   # erzeuge GUI-Board, Parameter: Zellengröße, Zellenabstand
+        
         self.topline()
-
-        self.topline_frame.pack(fill='x', padx=5)
+        
         self.board_frame.pack(fill="x", expand=True, pady=10, padx=5)
         self.update_windowsize()
 
@@ -141,8 +125,7 @@ class GUI():
                 else:
                     colors = ['gray', 'blue', 'darkgreen', 'red', 'darkblue', 'violet', 'cyan', 'yellow', 'orange']
                     cell.label.config(text=str(cell.surrounding_mines),fg=colors[cell.surrounding_mines], font=("Arial", 14, "bold"))
-                
-                    
+                           
     def guiboard_buttons(self):
         for row in self.board.matrix:
             for cell in row:
@@ -157,7 +140,7 @@ class GUI():
         boardwidth = self.board.rows*(self.cellsize+self.padxy)
         self.topline_frame = tk.Frame(master=self.gameFrame, height=100, width=boardwidth,bg='lightgray')
         self.flags_left()
-
+        
         """Smiley Button zum Restart des Spiels"""
         smiley_size = 80
         self.smiley_frame = tk.Frame(master=self.topline_frame, height=smiley_size, width=smiley_size,bg='red')
@@ -172,6 +155,8 @@ class GUI():
         self.timer_frame.place(x=boardwidth-self.mines_left_size, y=50-self.mines_left_size/2)
         self.timer_running = False
         self.timer_update()
+
+        self.topline_frame.pack(fill='x', padx=5)
 
     def flags_left(self):
         """Anzeige der Flaggen, die man theoretisch noch setzen muss"""
@@ -189,8 +174,7 @@ class GUI():
             time += 1
             self.timer_label.config(text=str(time))
             self.root.after(1000, self.timer_update)
-        
-
+     
     def open_field(self,event=None, cell=None):
         if not self.timer_running and self.game.gameactive:
             self.timer_running = True
