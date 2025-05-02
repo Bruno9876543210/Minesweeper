@@ -85,10 +85,41 @@ class GUI():
     
     def show_tutorial(self):
         tutorial_text="""
-        exampel
+Das Ziel des Spiels "Minesweeper" ist es, ein Minenfeld freizuräumen, ohne auf eine Mine zu stoßen.
+Dazu gräbt man immer die Felder auf, von welchen man weiß, dass sie sicher sind.
+Sollte man versehentlich doch auf eine Mine treffen explodiert diese und das Spiel ist vorbei.
+
+Wenn man ein freies Feld aufgedeckt hat, wird automatisch ein Radar plaziert,
+der die Minen in den umliegenden Feldern (auch diagonal) zählt.
+Nur mit diesen Informationen lässt sich im Spielverlauf meist nur mithilfe von Logik das Gesamte Spielfeld freiräumen.
+Ein Feld, von welchem du weißt, dass eine Mine darunter verborgen liegt, kannst du mit einer Flagge markieren.
+Diese ist nur eine Markierung für dich und wird nicht kontrolliert. Sollte sie falsch gesetzt sein,
+führt es jedoch wahrscheinlich in den nächsten paar Zügen zur Niederlage.
+
+Oben links in der Ecke sieht man zu Beginn die Anzahl der vergrabenen Minen.
+Wenn du eine Flagge setzt, wird Eins abgezogen, wenn also alle Flaggen richtig gesetzt sind, weißt du, wie viele noch fehlen.
+Sollte die Zahl negativ werden, hast du einen Fehler gemacht...
+
+Der Smiley oben in der Mitte ist der Restart Knopf des Spiels und zeigt gleichzeitig noch den Status des Spiels an:
+Ist er gelb, ist das Spiel im Gange, bei Grüner Farbe hast du gewonnen (Alle freien Felder geöffnet), bei Niederlage wird er Rot.
+Wenn man ihn anklickt, kommt man wieder ins Hauptmenü.
+
+Rechts daneben findet sich der Timer.
+Damit kannst du sehen, wie lange du für das Spiel gebraucht hast und persönliche Rekorde brechen!
+
+Um Zeit zu sparen gibt es eine Methode in Minesweeper, die sich Chording nennt:
+Wenn man alle Minen um ein Feld mit einer Flagge markiert hat (Anzahl Flaggen stimmt mit der Zahl im Feld überein),
+kann man mit einem Doppelklick auf dieses Feld alle anderen Nachbarfelder aufdecken.
+Wenn um ein Feld keine einzige Mine zu finden ist, werden automatisch alle Nachbarfelder geöffnet.
+
+Steuerung:
+Feld ausgraben: Linksklick auf das Feld
+Flagge setzen: Rechtsklick auf das Feld
+Chording: Doppelklick auf das Feld
         """
         tutorial_window = tk.Tk()
-        tutorial_window.geometry("500x500")
+        tutorial_window.title("Tutorial")
+        tutorial_window.geometry("575x500")
         scrollbar = tk.Scrollbar(master=tutorial_window)
         text = tk.Text(master=tutorial_window, wrap='word', yscrollcommand=scrollbar.set)
         text.place(anchor='nw', relx=0, rely=0)
