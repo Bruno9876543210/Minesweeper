@@ -63,10 +63,43 @@ class Board():
  
                         
 class GUI():
-    def __init__(self, root, board, game):
-        self.board = board
+
+    def __init__(self, root, game):
         self.game = game
         self.root = root
+
+        self.check_exit()
+
+    def start_window(self):
+        self.root.geometry('500x250')
+        self.root.title('Minesweeper')
+
+        #Button um das Spiel zu starten
+        self.game_starter = tk.Button(master=self.root, height=10, width=20, text="Start\nGame", bg='gray', command=self.init_game)
+        self.game_starter.pack(side='left', padx=50, pady=10)
+        self.button_start_exist = True
+
+        #Button um die Anleitung zu sehen
+        self.tutorial_button = tk.Button(master=self.root, height=1, width=20, bg='gray', text="Tutorial", command=self.show_tutorial)
+        self.tutorial_button.place(x=300, y=40)    
+    
+    def show_tutorial(self):
+        tutorial_text="""
+        exampel
+        """
+        tutorial_window = tk.Tk()
+        tutorial_window.geometry("500x500")
+        scrollbar = tk.Scrollbar(master=tutorial_window)
+        text = tk.Text(master=tutorial_window, wrap='word', yscrollcommand=scrollbar.set)
+        text.place(anchor='nw', relx=0, rely=0)
+        text.insert("1.0", tutorial_text)
+        text.config(state="disabled")
+    
+
+    def init_game(self):
+        if self.button_start_exist:
+            self.button_start_exist = False
+            self.game_starter.destroy()
         self.root.title('Minesweeper')        
 
         #files
@@ -154,7 +187,7 @@ class GUI():
         self.timer_label.place(anchor='center', relx=0.5, rely=0.5)
         self.timer_frame.place(x=boardwidth-self.mines_left_size, y=50-self.mines_left_size/2)
         self.timer_running = False
-        self.timer_update()
+        #self.timer_update()
 
         self.topline_frame.pack(fill='x', padx=5)
 
@@ -231,22 +264,27 @@ class GUI():
     def screen_lost(self):
         self.smiley_button.config(image=self.smiley[1])
         self.open_all()
+       
 
 class Game():
-    def start(self):
-        self.gameactive = True
+    def __init__(self):
         self.root = tk.Tk()
+        self.gui = GUI(self.root, self)
 
-        self.board = Board((10,10), 20)
+        self.gui.start_window()
+
+    def start_game(self):
+        self.gameactive = True
+
+        self.gui.board = Board((10,10), 18)
         
-        self.gui = GUI(self.root,self.board, self)
-        
+                
         self.root.mainloop()
 
     def check_win(self):
         if self.gameactive:
             win = True
-            for row in self.board.matrix:
+            for row in self.gui.board.matrix:
                 for cell in row:
                     if not cell.mine:
                         if not cell.revealed:
@@ -266,10 +304,13 @@ class Game():
         self.gui.screen_lost()
         
     def restart(self,event=None):
+        self.gui.timer_running = False
         if self.root:
             self.root.destroy()
-        self.start()
+
+        self.__init__()
+        self.start_game()
 
 if __name__=='__main__':
     game = Game()
-    game.start()
+    game.start_game()
