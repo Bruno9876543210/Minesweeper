@@ -68,7 +68,14 @@ class GUI():
         self.game = game
         self.root = root
 
+        self.presettings()
+
         self.check_exit()
+
+    def presettings(self):
+        """Standartwerte für die Variablen in den Einstellungen"""
+        self.starthelp_activated = True
+        print(1)
 
     def start_window(self):
         self.root.geometry('500x250')
@@ -81,52 +88,74 @@ class GUI():
 
         #Button um die Anleitung zu sehen
         self.tutorial_button = tk.Button(master=self.root, height=1, width=20, bg='gray', text="Tutorial", command=self.show_tutorial)
-        self.tutorial_button.place(x=300, y=40)    
+        self.tutorial_button.place(x=300, y=40)
+
+        #Button um zu den Einstellungen zu kommen
+        self.settings_button = tk.Button(master=self.root, height=1, width=20, bg='gray', text="Settings", command=self.show_settings_window)
+        self.settings_button.place(x=300, y=100)  
     
+    def show_settings_window(self):
+        if not hasattr(self, "settings_window") or not tk.Toplevel.winfo_exists(self.settings_window):
+            self.settings_window = tk.Toplevel()
+            self.settings_window.title("Settings")
+            self.settings_window.geometry("500x400")
+
+            #Button zur Aktivierung der Starthilfe
+            self.checkbutton_starthelp_var = tk.BooleanVar(value=self.starthelp_activated)
+            self.checkbutton_starthelp = tk.Checkbutton(master=self.settings_window, text="Zeige bei Spielbeginn ein Feld mit 0 an", offvalue=False, onvalue=True, variable=self.checkbutton_starthelp_var, command=self.checkbutton_starthelp_click)
+            self.checkbutton_starthelp.pack(side='top')
+
+    def checkbutton_starthelp_click(self):
+        self.starthelp_activated = self.checkbutton_starthelp_var.get()
+        print(self.starthelp_activated)
+
+
     def show_tutorial(self):
         tutorial_text="""
-Das Ziel des Spiels "Minesweeper" ist es, ein Minenfeld freizuräumen, ohne auf eine Mine zu stoßen.
-Dazu gräbt man immer die Felder auf, von welchen man weiß, dass sie sicher sind.
-Sollte man versehentlich doch auf eine Mine treffen explodiert diese und das Spiel ist vorbei.
+        Das Ziel des Spiels "Minesweeper" ist es, ein Minenfeld freizuräumen, ohne auf eine Mine zu stoßen.
+        Dazu gräbt man immer die Felder auf, von welchen man weiß, dass sie sicher sind.
+        Sollte man versehentlich doch auf eine Mine treffen explodiert diese und das Spiel ist vorbei.
 
-Wenn man ein freies Feld aufgedeckt hat, wird automatisch ein Radar plaziert,
-der die Minen in den umliegenden Feldern (auch diagonal) zählt.
-Nur mit diesen Informationen lässt sich im Spielverlauf meist nur mithilfe von Logik das Gesamte Spielfeld freiräumen.
-Ein Feld, von welchem du weißt, dass eine Mine darunter verborgen liegt, kannst du mit einer Flagge markieren.
-Diese ist nur eine Markierung für dich und wird nicht kontrolliert. Sollte sie falsch gesetzt sein,
-führt es jedoch wahrscheinlich in den nächsten paar Zügen zur Niederlage.
+        Wenn man ein freies Feld aufgedeckt hat, wird automatisch ein Radar plaziert,
+        der die Minen in den umliegenden Feldern (auch diagonal) zählt.
+        Nur mit diesen Informationen lässt sich im Spielverlauf meist nur mithilfe von Logik das Gesamte Spielfeld freiräumen.
+        Ein Feld, von welchem du weißt, dass eine Mine darunter verborgen liegt, kannst du mit einer Flagge markieren.
+        Diese ist nur eine Markierung für dich und wird nicht kontrolliert. Sollte sie falsch gesetzt sein,
+        führt es jedoch wahrscheinlich in den nächsten paar Zügen zur Niederlage.
 
-Oben links in der Ecke sieht man zu Beginn die Anzahl der vergrabenen Minen.
-Wenn du eine Flagge setzt, wird Eins abgezogen, wenn also alle Flaggen richtig gesetzt sind, weißt du, wie viele noch fehlen.
-Sollte die Zahl negativ werden, hast du einen Fehler gemacht...
+        Oben links in der Ecke sieht man zu Beginn die Anzahl der vergrabenen Minen.
+        Wenn du eine Flagge setzt, wird Eins abgezogen, wenn also alle Flaggen richtig gesetzt sind, weißt du, wie viele noch fehlen.
+        Sollte die Zahl negativ werden, hast du einen Fehler gemacht...
 
-Der Smiley oben in der Mitte ist der Restart Knopf des Spiels und zeigt gleichzeitig noch den Status des Spiels an:
-Ist er gelb, ist das Spiel im Gange, bei Grüner Farbe hast du gewonnen (Alle freien Felder geöffnet), bei Niederlage wird er Rot.
-Wenn man ihn anklickt, kommt man wieder ins Hauptmenü.
+        Der Smiley oben in der Mitte ist der Restart Knopf des Spiels und zeigt gleichzeitig noch den Status des Spiels an:
+        Ist er gelb, ist das Spiel im Gange, bei Grüner Farbe hast du gewonnen (Alle freien Felder geöffnet), bei Niederlage wird er Rot.
+        Wenn man ihn anklickt, kommt man wieder ins Hauptmenü.
 
-Rechts daneben findet sich der Timer.
-Damit kannst du sehen, wie lange du für das Spiel gebraucht hast und persönliche Rekorde brechen!
+        Rechts daneben findet sich der Timer.
+        Damit kannst du sehen, wie lange du für das Spiel gebraucht hast und persönliche Rekorde brechen!
 
-Um Zeit zu sparen gibt es eine Methode in Minesweeper, die sich Chording nennt:
-Wenn man alle Minen um ein Feld mit einer Flagge markiert hat (Anzahl Flaggen stimmt mit der Zahl im Feld überein),
-kann man mit einem Doppelklick auf dieses Feld alle anderen Nachbarfelder aufdecken.
-Wenn um ein Feld keine einzige Mine zu finden ist, werden automatisch alle Nachbarfelder geöffnet.
+        Um Zeit zu sparen gibt es eine Methode in Minesweeper, die sich Chording nennt:
+        Wenn man alle Minen um ein Feld mit einer Flagge markiert hat (Anzahl Flaggen stimmt mit der Zahl im Feld überein),
+        kann man mit einem Doppelklick auf dieses Feld alle anderen Nachbarfelder aufdecken.
+        Wenn um ein Feld keine einzige Mine zu finden ist, werden automatisch alle Nachbarfelder geöffnet.
 
-Steuerung:
-Feld ausgraben: Linksklick auf das Feld
-Flagge setzen: Rechtsklick auf das Feld
-Chording: Doppelklick auf das Feld
+        Steuerung:
+        Feld ausgraben: Linksklick auf das Feld
+        Flagge setzen: Rechtsklick auf das Feld
+        Chording: Doppelklick auf das Feld
+
+        Bei Interesse findet man genauere Anleitungen zu Spielweise und Taktiken im Internet.
         """
-        tutorial_window = tk.Tk()
-        tutorial_window.title("Tutorial")
-        tutorial_window.geometry("575x500")
-        scrollbar = tk.Scrollbar(master=tutorial_window)
-        text = tk.Text(master=tutorial_window, wrap='word', yscrollcommand=scrollbar.set)
-        text.place(anchor='nw', relx=0, rely=0)
-        text.insert("1.0", tutorial_text)
-        text.config(state="disabled")
+        if not hasattr(self, "tutorial_window") or not tk.Toplevel.winfo_exists(self.tutorial_window):
+                self.tutorial_window = tk.Toplevel()
+                self.tutorial_window.title("Tutorial")
+                self.tutorial_window.geometry("575x500")
+                scrollbar = tk.Scrollbar(master=self.tutorial_window)
+                text = tk.Text(master=self.tutorial_window, wrap='word', yscrollcommand=scrollbar.set)
+                text.place(anchor='nw', relx=0, rely=0)
+                text.insert("1.0", tutorial_text)
+                text.config(state="disabled")
     
-
     def init_game(self):
         if self.button_start_exist:
             self.button_start_exist = False
@@ -173,6 +202,7 @@ Chording: Doppelklick auf das Feld
          
         self.guiboard_labels()
         self.guiboard_buttons()
+        self.starthelp()
 
     def update_windowsize(self):
         self.root.update_idletasks()
@@ -200,25 +230,30 @@ Chording: Doppelklick auf das Feld
                 cell.label.bind('<Double-Button-1>', lambda event, cell=cell:self.chord(event, cell))
                          
     def topline(self):
-        """oberer balken auf dem Spielbildschirm für Smileyknopf, Timer und Minenanzahl"""
+        """oberer balken auf dem Spielbildschirm für Restart, Timer und Minenanzahl"""
         boardwidth = self.board.rows*(self.cellsize+self.padxy)
         self.topline_frame = tk.Frame(master=self.gameFrame, height=100, width=boardwidth,bg='lightgray')
         self.flags_left()
         
-        """Smiley Button zum Restart des Spiels"""
+        #Smiley Button zum Restart des Spiels
         smiley_size = 80
         self.smiley_frame = tk.Frame(master=self.topline_frame, height=smiley_size, width=smiley_size,bg='red')
         self.smiley_button = tk.Button(master=self.smiley_frame, height=smiley_size, width=smiley_size, image=self.smiley[0], command=self.game.restart)
         self.smiley_frame.pack(side='top', padx=10)
         self.smiley_button.pack(expand=True)
 
-        """Initialisierung des Timers"""
+        #Initialisierung des Timers
         self.timer_frame = tk.Frame(master=self.topline_frame, height=self.mines_left_size, width=self.mines_left_size)
         self.timer_label = tk.Label(master=self.timer_frame, height=self.mines_left_size, width=self.mines_left_size, text="0", font=("Arial", 14, "bold"))
         self.timer_label.place(anchor='center', relx=0.5, rely=0.5)
         self.timer_frame.place(x=boardwidth-self.mines_left_size, y=50-self.mines_left_size/2)
         self.timer_running = False
-        #self.timer_update()
+
+        # Hauptmenü button
+        # self.button_back_frame = tk.Frame(master=self.topline_frame, height=2, width=smiley_size, bg='gray')
+        # self.button_back = tk.Button(master=self.topline_frame, height=2, width=5, text="Back", command=self.game.restart)
+        # self.button_back_frame.pack(side='top', padx=1, pady=0)
+        # self.button_back.pack(expand=True)
 
         self.topline_frame.pack(fill='x', padx=5)
 
@@ -285,12 +320,22 @@ Chording: Doppelklick auf das Feld
             self.mines_left += 1
         self.mines_left_label.config(text=self.mines_left)
 
+    def starthelp(self):
+        if self.starthelp_activated:
+            for row in self.board.matrix:
+                for cell in row:
+                    if cell.surrounding_mines == 0 and not cell.mine:
+                        cell.button.config(bg='green')
+                        return
+
     def check_exit(self):
         self.root.bind('<Escape>',self.close_window)
     
     def close_window(self, event):
         self.root.quit()
         self.root.destroy()
+        if self.tutorial_window: self.tutorial_window.destroy()
+        if self.settings_window:self.settings_window.destroy()
     
     def screen_lost(self):
         self.smiley_button.config(image=self.smiley[1])
@@ -336,8 +381,12 @@ class Game():
         
     def restart(self,event=None):
         self.gui.timer_running = False
-        if self.root:
-            self.root.destroy()
+        if hasattr(self.gui, "tutorial_window") and self.gui.tutorial_window:
+            self.gui.tutorial_window.destroy()
+        if hasattr(self.gui, "settings_window") and self.gui.settings_window:
+            self.gui.settings_window.destroy()
+        if self.root: self.root.destroy()
+        
 
         self.__init__()
         self.start_game()
