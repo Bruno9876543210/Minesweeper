@@ -2,6 +2,7 @@ import tkinter as tk
 import numpy as np
 import random as rd
 from pathlib import Path
+from tkinter import messagebox
 
 
 
@@ -74,7 +75,10 @@ class GUI():
 
     def presettings(self):
         """Standartwerte für die Variablen in den Einstellungen"""
-        self.starthelp_activated = True
+
+        
+        self.starthelp_activated = self.game.presettings[0]
+        self.quantity_mines = self.game.presettings[1]
 
     def start_window(self):
         self.root.geometry('500x250')
@@ -149,6 +153,7 @@ class GUI():
                 text.place(anchor='nw', relx=0, rely=0)
                 text.insert("1.0", doku_text)
                 text.config(state="disabled")
+        else: self.doku_window.destroy()
 
     def show_settings_window(self):
         if not hasattr(self, "settings_window") or not tk.Toplevel.winfo_exists(self.settings_window):
@@ -156,14 +161,42 @@ class GUI():
             self.settings_window.title("Settings")
             self.settings_window.geometry("500x400")
 
+            #Apply-Button
+            self.apply_button = tk.Button(master=self.settings_window, height=2, width=5, text='Apply', command=self.apply_settings, font=("Arial", 10, "bold"))
+            self.apply_button.pack(side='top', pady=1)
+
             #Button zur Aktivierung der Starthilfe
             self.checkbutton_starthelp_var = tk.BooleanVar(value=self.starthelp_activated)
             self.checkbutton_starthelp = tk.Checkbutton(master=self.settings_window, text="Zeige bei Spielbeginn ein Feld mit 0 an", offvalue=False, onvalue=True, variable=self.checkbutton_starthelp_var, command=self.apply_settings)
             self.checkbutton_starthelp.pack(side='top')
 
+            #Entry Anzahl Minen
+            self.quantity_mines_frame = tk.Frame(master=self.settings_window, height=2, width=10, bg='white')
+            self.quantity_mines_frame.pack(side='top', pady=1)
+            self.quantity_mines_label = tk.Label(master=self.quantity_mines_frame, height=2, width=50, bg='white', text="Mine quantity: ", fg='black')
+            self.quantity_mines_label.pack(side='left')
+            self.quantity_mines_entry = tk.Entry(master=self.quantity_mines_frame, bg='grey')
+            self.quantity_mines_entry.insert(0,self.quantity_mines)
+            self.quantity_mines_entry.pack(side='right', padx=1)
+            
+
+        else:
+            self.apply_settings()
+            self.settings_window.destroy()
+
     def apply_settings(self):
         self.starthelp_activated = self.checkbutton_starthelp_var.get()
-        #print(self.starthelp_activated)
+
+        try:
+            if 0 < int(self.quantity_mines_entry.get()) < 100:
+                self.quantity_mines = int(self.quantity_mines_entry.get())
+                print(self.quantity_mines)
+            else: messagebox.showerror("Error", "This mine quantity is not possible!")
+        except: messagebox.showerror("Error", "Input makes no sense!")
+
+        
+        self.game.presettings = [self.starthelp_activated, self.quantity_mines]
+        
 
     def show_tutorial(self):
         tutorial_text="""
@@ -210,8 +243,11 @@ class GUI():
                 text.place(anchor='nw', relx=0, rely=0)
                 text.insert("1.0", tutorial_text)
                 text.config(state="disabled")
+        else: self.tutorial_window.destroy()
     
     def init_game(self):
+        self.board = Board((10,10), self.quantity_mines)
+
         if self.button_start_exist:
             self.button_start_exist = False
             self.game_starter.destroy()
@@ -387,28 +423,28 @@ class GUI():
         self.root.bind('<Escape>',self.close_window)
     
     def close_window(self, event):
+        if hasattr('self', self.tutorial_window) and self.tutorial_window: self.tutorial_window.destroy()
+        if hasattr('self', self.settings_window) and self.settings_window: self.settings_window.destroy()
+        if hasattr('self', self.doku_window) and self.doku_window: self.doku_window.destroy()
+        self.timer_running = False
         self.root.quit()
         self.root.destroy()
-        if self.tutorial_window: self.tutorial_window.destroy()
-        if self.settings_window:self.settings_window.destroy()
-    
+            
     def screen_lost(self):
         self.smiley_button.config(image=self.smiley[1])
         self.open_all()
        
 
 class Game():
-    def __init__(self):
+    def __init__(self, presettings=[True, 18]):
         self.root = tk.Tk()
+        self.presettings = presettings
         self.gui = GUI(self.root, self)
 
         self.gui.start_window()
 
     def start_game(self):
-        self.gameactive = True
-
-        self.gui.board = Board((10,10), 18)
-        
+        self.gameactive = True    
                 
         self.root.mainloop()
 
@@ -443,7 +479,7 @@ class Game():
         if self.root: self.root.destroy()
         
 
-        self.__init__()
+        self.__init__(presettings=self.presettings)
         self.start_game()
 
 if __name__=='__main__':
