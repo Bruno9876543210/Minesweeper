@@ -75,7 +75,6 @@ class GUI():
     def presettings(self):
         """Standartwerte für die Variablen in den Einstellungen"""
         self.starthelp_activated = True
-        print(1)
 
     def start_window(self):
         self.root.geometry('500x250')
@@ -93,7 +92,64 @@ class GUI():
         #Button um zu den Einstellungen zu kommen
         self.settings_button = tk.Button(master=self.root, height=1, width=20, bg='gray', text="Settings", command=self.show_settings_window)
         self.settings_button.place(x=300, y=100)  
+
+        #Button für den Projektablauf
+        self.doku_button = tk.Button(master=self.root, height=1, width=20, text="Dokumentation", bg='gray', command=self.show_doku)
+        self.doku_button.place(x=300, y=160)
     
+    def show_doku(self):
+        doku_text = """
+        Die Idee für mein Projekt hatte ich in den Faschingsferien im Skiurlaub.
+        Auf den Gondelfahrten habe ich mir dort bereits im Kopf einen recht detailierten Plan für das Programm gemacht.
+        Daher die Programmierung dann in den ersten Unterrichtsstunden auch besonders schnell.
+
+        Angefangen habe ich mit der "Core Logik", noch ohne Grafische Oberfläche.
+        Dazu habe ich die Board- und die Cell-Klasse und das damit verbundene Array für das Spielfeld angelegt.
+        Nun habe ich eine Funktion geschrieben, die dort zufällig "Minen verteilt" und anschließend eine,
+        mit welcher für jede Zelle durch alle Nachbarfelder iteriert wird und dabei die Anzahl der Nachbarminen gezählt wird.
+        Damit war das Grundsätzliche Spielfeld auch schon quasi fertig.
+        Dieses konnte in den frühen Versionen jedoch nur über den print() Befehl angezeigt werden.
+
+        Im nächsten Schritt habe ich dann die GUI-Klasse angelegt und das Spielfeld nun auch als grafische Oberfläche programmiert.
+        Dazu habe ich für jede Zelle einen Button angelegt, der beim Anklicken verschwindet und die Zahl darunter freigibt.
+        Danach habe ich das Verlieren eingebaut, indem das Spiel durch das Aufdecken einer Mine beendet wird.
+        Sobald man alle Felder ohne Mine geöffnet hat, hat man das Spiel gewonnen.
+        Diese Aufgaben des anschließenden Neustarts oder dem Beenden des Spiels habe ich in die "Game Klasse" ausgelagert.
+
+        Bis jetzt musste man sich immer merken, wo man eine Mine vermutete, daher habe ich, wie im Originalspiel auch,
+        die das Flaggensetzen ermöglicht.
+
+        Damit Flaggen und Minen nicht mehr mit "F" und "X" als Text angezeigt wurden, habe ich anschließend Grafiken dafür implementiert.
+
+        Außerdem wollte ich einen richtigen Restart-Knopf. Zuvor konnte man nach dem beendeten Spiel (Sieg oder Niederlage) mit einem beliebigen Klick neustarten.
+        Das erlaubte einem allerdings nicht, eine laufende Runde zu unterbrechen, ohne das komplette Programm neuzustarten.
+        In den Restart-Knopf habe ich auch gleich noch eine Anzeige des Spielstatuses eingebaut.
+        So ist der sehr prominent plazierte Smiley-Button entstanden.
+        
+        Um das Spiel spannender zu gestalten, habe ich mich anschließend entschieden, einen Timer einzubauen, damit man auf Zeit spielen kann.
+
+        Desweiteren habe ich eine Anzeige programmiert, wie viele Minen noch übrig sind, damit man daraus eventuell Schlüsse über ihre Verteilung ziehen kann.
+
+        Soweit hat das Spiel bereits sehr gut funktioniert und auch Spaß zu spielen gemacht, jedoch fehlte noch ein wichtiger Schritt:
+        Um die Projektanforderungen mit den Erklärungstexten zu erfüllen, sowie Einstellungen zu ermölichen, brauchte ich ein Hauptmenü.
+        Dazu habe ich das selbe Fenster wie das Spiel verwendet, jedoch einen anderen Hauptframe angezeit.
+        Die einzelnen Knöpfen habe ich mit dem Öffnen von den verschiedenen Unterfenstern verbunden, die beispielsweise diesen Text hier anzeigen.
+
+        Das Spiel hatte aber noch ein Problem:
+        Um das Spiel zu beginnen, musste man immer raten und es konnte teilweise lange dauern, bis man wirklich spielen konnte.
+        Daher habe ich immer die erste 0, also ein Feld ohne Mine in einem Nachbarfeld, grün markieren lassen.
+        Wenn man es lieber auf die "Harte Tour" probieren möchte, kann man dieses Feature aber auch in den Einstellungen deaktivieren.
+        """
+        if not hasattr(self, "doku_window") or not tk.Toplevel.winfo_exists(self.doku_window):
+                self.doku_window = tk.Toplevel()
+                self.doku_window.title("Dokumentation")
+                self.doku_window.geometry("575x500")
+                scrollbar = tk.Scrollbar(master=self.doku_window)
+                text = tk.Text(master=self.doku_window, wrap='word', yscrollcommand=scrollbar.set)
+                text.place(anchor='nw', relx=0, rely=0)
+                text.insert("1.0", doku_text)
+                text.config(state="disabled")
+
     def show_settings_window(self):
         if not hasattr(self, "settings_window") or not tk.Toplevel.winfo_exists(self.settings_window):
             self.settings_window = tk.Toplevel()
@@ -102,13 +158,12 @@ class GUI():
 
             #Button zur Aktivierung der Starthilfe
             self.checkbutton_starthelp_var = tk.BooleanVar(value=self.starthelp_activated)
-            self.checkbutton_starthelp = tk.Checkbutton(master=self.settings_window, text="Zeige bei Spielbeginn ein Feld mit 0 an", offvalue=False, onvalue=True, variable=self.checkbutton_starthelp_var, command=self.checkbutton_starthelp_click)
+            self.checkbutton_starthelp = tk.Checkbutton(master=self.settings_window, text="Zeige bei Spielbeginn ein Feld mit 0 an", offvalue=False, onvalue=True, variable=self.checkbutton_starthelp_var, command=self.apply_settings)
             self.checkbutton_starthelp.pack(side='top')
 
-    def checkbutton_starthelp_click(self):
+    def apply_settings(self):
         self.starthelp_activated = self.checkbutton_starthelp_var.get()
-        print(self.starthelp_activated)
-
+        #print(self.starthelp_activated)
 
     def show_tutorial(self):
         tutorial_text="""
